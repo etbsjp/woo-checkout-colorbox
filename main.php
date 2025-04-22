@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: WooCommerce Checkout Colorbox
- * Version: 1.0.5
+ * Version: 1.0.6
  * Description: WooCommerce 注文確定ページに確認用のダイアログを表示します。
  * Author: DAI
  * Author URI: https://etbs.jp
@@ -10,7 +10,7 @@
  * Domain Path: /languages
  * @package woo-checkout-colorbox
  */
-$clbx_version = '1.0.5';
+$clbx_version = '1.0.6';
 
 // 設定
 require_once( dirname( __FILE__ ) . '/tools/setting.php' );
