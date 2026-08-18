@@ -80,16 +80,42 @@ class Woo_Chkbox_Settings {
 	public static function woochksetting_admin_init() {
 		if ( isset( $_POST['woochksetting-page'] ) && $_POST['woochksetting-page'] ) {
 			if ( check_admin_referer( 'woochksetting-nonce-key', 'woochksetting-page' ) ) {
+				// 保存には設定画面メニューと同じ権限（publish_pages）を要求する
+				if ( ! current_user_can( 'publish_pages' ) ) {
+					wp_die( esc_html__( 'この操作を行う権限がありません。', 'woo-checkout-colorbox' ) );
+				}
 				// 保存処理
-				if ( isset( $_POST['woochksetting'] ) && $_POST['woochksetting'] ) {
-					$arr = str_replace( array( "\r\n", "\r", "\n" ), "##", $_POST['woochksetting']['clbx_inputarea_chk'] );
-					$arr = explode("##", $arr);
-					$_POST['woochksetting']['clbx_inputarea_chk'] = $arr;
-					update_option( 'woochksetting', $_POST['woochksetting'] );
+				if ( isset( $_POST['woochksetting'] ) && is_array( $_POST['woochksetting'] ) ) {
+					// $_POST はスラッシュが付与されているため unslash してから扱う
+					$posted = wp_unslash( $_POST['woochksetting'] );
+					$saved  = array();
+
+					// 既知キーのみを許可する（未知キーは保存しない）。テキスト系項目はsanitize_text_fieldで無害化する
+					$text_keys = array( 'clbx_order_text', 'clbx_checkout_page', 'clbx_dialog_title', 'clbx_dialog_text' );
+					foreach ( $text_keys as $text_key ) {
+						if ( isset( $posted[ $text_key ] ) ) {
+							$saved[ $text_key ] = sanitize_text_field( $posted[ $text_key ] );
+						}
+					}
+
+					// clbx_inputarea_chk の各行はHTMLのidとしてそのまま使われるため、sanitize_keyで無害化し空行は除外する
+					$saved['clbx_inputarea_chk'] = array();
+					if ( isset( $posted['clbx_inputarea_chk'] ) ) {
+						$lines = preg_split( '/\r\n|\r|\n/', (string) $posted['clbx_inputarea_chk'] );
+						foreach ( $lines as $line ) {
+							$sanitized_line = sanitize_key( trim( $line ) );
+							if ( '' !== $sanitized_line ) {
+								$saved['clbx_inputarea_chk'][] = $sanitized_line;
+							}
+						}
+					}
+
+					update_option( 'woochksetting', $saved );
 				} else {
 					update_option( 'woochksetting', '' );
 				}
 				wp_safe_redirect( menu_page_url( 'woochksetting-page', false ) );
+				exit;
 			}
 		}
 	}

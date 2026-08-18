@@ -10,6 +10,10 @@
  * Domain Path: /languages
  * @package woo-checkout-colorbox
  */
+
+// プラグインファイルのパスを定数化しておく（js/css の URL 生成をディレクトリ名固定にしないため）
+define( 'CLBX_PLUGIN_FILE', __FILE__ );
+
 $clbx_version = '1.0.6';
 
 // 設定
@@ -27,9 +31,19 @@ if ( ! function_exists( 'clrbx_styles' ) ){
 		global $clbx_checkout_page;
 		if( is_page( $clbx_checkout_page ) ) {
 			wp_enqueue_script( 'jquery-ui-dialog' );
-			wp_enqueue_script( 'col-scripts',  plugins_url( '/woo-checkout-colorbox/js/col.php' ), array( 'jquery' ), $clbx_version, true );
+			wp_enqueue_script( 'col-scripts', plugins_url( 'js/col.js', CLBX_PLUGIN_FILE ), array( 'jquery' ), $clbx_version, true );
+
+			// 設定値（表示チェック対象のセレクタ）をJSへ渡す。wp_json_encode()でJSON化することで
+			// セレクタ文字列の外に出て任意のJSコードを書けてしまう経路を塞ぐ。
+			$option = get_option( 'woochksetting', Woo_Chkbox_Settings::options_default() );
+			$clbx_script_data = array(
+				'inputareaChk' => $option['clbx_inputarea_chk'],
+				'displayArea'  => Woo_Chkbox_Settings::display_area(),
+			);
+			wp_add_inline_script( 'col-scripts', 'var clbxScriptData = ' . wp_json_encode( $clbx_script_data ) . ';', 'before' );
+
 			wp_enqueue_style( 'jquery-ui-dialog-min-css', includes_url().'css/jquery-ui-dialog.min.css' );
-			wp_enqueue_style( 'col-style', plugins_url( '/woo-checkout-colorbox/css/col.css' ), array(), $clbx_version, 'all');
+			wp_enqueue_style( 'col-style', plugins_url( 'css/col.css', CLBX_PLUGIN_FILE ), array(), $clbx_version, 'all');
 		}
 	}
 	add_action( 'wp_enqueue_scripts', 'clrbx_styles' );
@@ -48,10 +62,13 @@ if ( ! function_exists( 'add_clrbx_action' ) ){
 	function add_clrbx_action() {
 		global $clbx_dialog_title;
 		global $clbx_dialog_text;
+		// 設定画面由来の値を出力する際は必ずエスケープする（属性値はesc_attr、本文はesc_html）
+		$clbx_dialog_title_esc = esc_attr( $clbx_dialog_title );
+		$clbx_dialog_text_esc = esc_html( $clbx_dialog_text );
 		$html = <<<EOF
 		<div style="display: none;">
-		<section id="clrbx" title="{$clbx_dialog_title}">
-		<p>{$clbx_dialog_text}</p>
+		<section id="clrbx" title="{$clbx_dialog_title_esc}">
+		<p>{$clbx_dialog_text_esc}</p>
 		<table id="clbx_dialog_table"><tbody>
 		</tbody></table>
 		<ul>
