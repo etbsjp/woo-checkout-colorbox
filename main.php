@@ -19,6 +19,9 @@ $clbx_version = '1.0.6';
 // 設定
 require_once( dirname( __FILE__ ) . '/tools/setting.php' );
 
+// サポート導線（ダッシュボードウィジェット・プラグイン一覧行・設定画面フッター）
+require_once( dirname( __FILE__ ) . '/inc/func.php' );
+
 $option = get_option('woochksetting', Woo_Chkbox_Settings::options_default());
 $clbx_order_text = $option['clbx_order_text'];
 $clbx_checkout_page = $option['clbx_checkout_page'];
