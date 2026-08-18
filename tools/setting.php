@@ -12,10 +12,11 @@ class Woo_Chkbox_Settings {
 
 	public static function add_woochksetting_page() {
 		$option = get_option('woochksetting', Woo_Chkbox_Settings::options_default());
-		$op1 = $option['clbx_order_text'];
-		$op2 = $option['clbx_checkout_page'];
-		$op3 = $option['clbx_dialog_title'];
-		$op4 = $option['clbx_dialog_text'];
+		// フォームのvalue属性に出力するため、属性値エスケープ（esc_attr）を通す
+		$op1 = esc_attr( $option['clbx_order_text'] );
+		$op2 = esc_attr( $option['clbx_checkout_page'] );
+		$op3 = esc_attr( $option['clbx_dialog_title'] );
+		$op4 = esc_attr( $option['clbx_dialog_text'] );
 		$html = <<< EOF
 		<style>#woochksetting-form label{font-weight:bold}input.clbx{width:350px}textarea.clbx{ width: 400px; }</style>
 		<h1>注文確認画面設定</h1>
