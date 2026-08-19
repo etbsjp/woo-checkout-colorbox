@@ -3,10 +3,10 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit();
 }
 
-function etbs_woochksetting_uninstall() {
-	delete_option('woochksetting');
+function clbx_woochksetting_uninstall() {
+	// アンインストール時にデータは消さない方針のため、ここでは何もしない
 }
 
-etbs_woochksetting_uninstall();
+clbx_woochksetting_uninstall();
 
 ?>

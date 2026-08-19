@@ -10,12 +10,21 @@ class Woo_Chkbox_Settings {
 		add_submenu_page( 'woocommerce', '注文確認設定', '注文確認設定', 'publish_pages', 'woochksetting-page', array(__CLASS__, 'add_woochksetting_page') ); 
 	}
 
+	/**
+	 * 注文確認設定画面（管理画面のサブメニュー）を出力する
+	 *
+	 * 保存済みオプションを取得し、入力フォームと入力補助用テキストエリアを描画する。
+	 * フォームの各値は出力時にエスケープしてから描画する。
+	 *
+	 * @return void
+	 */
 	public static function add_woochksetting_page() {
 		$option = get_option('woochksetting', Woo_Chkbox_Settings::options_default());
-		$op1 = $option['clbx_order_text'];
-		$op2 = $option['clbx_checkout_page'];
-		$op3 = $option['clbx_dialog_title'];
-		$op4 = $option['clbx_dialog_text'];
+		// フォームのvalue属性に出力するため、属性値エスケープ（esc_attr）を通す
+		$op1 = esc_attr( $option['clbx_order_text'] );
+		$op2 = esc_attr( $option['clbx_checkout_page'] );
+		$op3 = esc_attr( $option['clbx_dialog_title'] );
+		$op4 = esc_attr( $option['clbx_dialog_text'] );
 		$html = <<< EOF
 		<style>#woochksetting-form label{font-weight:bold}input.clbx{width:350px}textarea.clbx{ width: 400px; }</style>
 		<h1>注文確認画面設定</h1>
@@ -36,7 +45,8 @@ class Woo_Chkbox_Settings {
 		echo $html;
 		echo '<p><label>実行時に空かどうか判定するテキストボックス（空白行や存在しない名前を指定するとエラーします。ご注意ください。）：</label></p>';
 		echo '<textarea id="clbx_inputarea_chk" class="clbx clbx_inputarea_chk" name="woochksetting[clbx_inputarea_chk]" rows="20">';
-		echo Woo_Chkbox_Settings::clrset_gets();
+		// 未パッチ版で保存された旧DBデータがサニタイズを経ずに出力される可能性があるため、出力時にもエスケープする（textarea内なのでesc_textarea）
+		echo esc_textarea( Woo_Chkbox_Settings::clrset_gets() );
 		echo '</textarea>';
 		echo '<p><input type="submit" value="設定を保存" class="button button-primary button-large"></p>';
 		echo '</form>';
@@ -77,19 +87,53 @@ class Woo_Chkbox_Settings {
 		return $inv;
 	}
 
+	/**
+	 * 注文確認設定画面のフォーム送信を処理する（admin_initフック）
+	 *
+	 * nonceと権限（publish_pages）を検証したうえで、POSTされた設定値をサニタイズして
+	 * 保存し、設定画面へリダイレクトする。
+	 *
+	 * @return void
+	 */
 	public static function woochksetting_admin_init() {
 		if ( isset( $_POST['woochksetting-page'] ) && $_POST['woochksetting-page'] ) {
 			if ( check_admin_referer( 'woochksetting-nonce-key', 'woochksetting-page' ) ) {
+				// 保存には設定画面メニューと同じ権限（publish_pages）を要求する
+				if ( ! current_user_can( 'publish_pages' ) ) {
+					wp_die( esc_html__( 'この操作を行う権限がありません。', 'woo-checkout-colorbox' ) );
+				}
 				// 保存処理
-				if ( isset( $_POST['woochksetting'] ) && $_POST['woochksetting'] ) {
-					$arr = str_replace( array( "\r\n", "\r", "\n" ), "##", $_POST['woochksetting']['clbx_inputarea_chk'] );
-					$arr = explode("##", $arr);
-					$_POST['woochksetting']['clbx_inputarea_chk'] = $arr;
-					update_option( 'woochksetting', $_POST['woochksetting'] );
+				if ( isset( $_POST['woochksetting'] ) && is_array( $_POST['woochksetting'] ) ) {
+					// $_POST はスラッシュが付与されているため unslash してから扱う
+					$posted = wp_unslash( $_POST['woochksetting'] );
+					$saved  = array();
+
+					// 既知キーのみを許可する（未知キーは保存しない）。テキスト系項目はsanitize_text_fieldで無害化する
+					$text_keys = array( 'clbx_order_text', 'clbx_checkout_page', 'clbx_dialog_title', 'clbx_dialog_text' );
+					foreach ( $text_keys as $text_key ) {
+						if ( isset( $posted[ $text_key ] ) ) {
+							$saved[ $text_key ] = sanitize_text_field( $posted[ $text_key ] );
+						}
+					}
+
+					// clbx_inputarea_chk の各行はHTMLのidとしてそのまま使われるため、sanitize_keyで無害化し空行は除外する
+					$saved['clbx_inputarea_chk'] = array();
+					if ( isset( $posted['clbx_inputarea_chk'] ) ) {
+						$lines = preg_split( '/\r\n|\r|\n/', (string) $posted['clbx_inputarea_chk'] );
+						foreach ( $lines as $line ) {
+							$sanitized_line = sanitize_key( trim( $line ) );
+							if ( '' !== $sanitized_line ) {
+								$saved['clbx_inputarea_chk'][] = $sanitized_line;
+							}
+						}
+					}
+
+					update_option( 'woochksetting', $saved );
 				} else {
 					update_option( 'woochksetting', '' );
 				}
 				wp_safe_redirect( menu_page_url( 'woochksetting-page', false ) );
+				exit;
 			}
 		}
 	}
