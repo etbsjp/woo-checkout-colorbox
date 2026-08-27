@@ -100,3 +100,8 @@ if ( ! function_exists( 'clbx_admin_footer_text' ) ) {
 	}
 	add_filter( 'admin_footer_text', 'clbx_admin_footer_text' );
 }
+
+// ★ 陽性対照用の使い捨てコード。CI が赤くなることを確認したら破棄する。
+function wccb_ci_positive_control_probe() {
+	echo $_GET['probe'];
+}
