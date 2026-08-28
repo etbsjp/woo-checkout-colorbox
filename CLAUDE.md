@@ -45,85 +45,25 @@ task-queue #111 で「`Requires PHP` を書かない判断として合意した�
 `woo-checkout-colorbox` と `widget-shortcode-tools` が無宣言なのは、この理由による意図的な判断。
 **8本で揃えにこないこと。**
 
-## CI（2026-08-28 導入・task-queue #155 / issue #3）
+## CI（2026-08-28 導入）
 
-PR ごとに GitHub Actions で3ジョブ走る。定義は `.github/workflows/ci.yml`。
-★ **原本 `etbsjp/widget-shortcode-tools` の `dist` `3857ad4` とバイト一致。書き換えないこと。**
+**共通ルールは `~/.claude/etbs-plugin-rules.md` の 2.7 節**（standard の選定理由・`phpcbf` を走らせない理由・
+third-party action をタグ固定にしている判断・陽性対照・配布物の検証手順など）。
+**そちらの内容はここに転記しない**（二重管理になり、必ず片方が古びる）。
+ここに置くのは **このリポジトリでしか決まらない値**だけ。
 
-| ジョブ | 中身 |
-|---|---|
-| `php -l (PHP 7.4)` / `(PHP 8.3)` | 追跡している全 `.php` の構文チェック |
-| `PHPCS (WordPress-Extra, changed lines)` | WPCS を **PR の差分行だけ**に適用（`sirbrillig/phpcs-changed`） |
-
-### 決定済み（変えないこと）
-
-- ★★ **既存コードの指摘は直さない。** 2026-08-28 実測で `WordPress-Extra` に対し **65 ERROR / 22 WARNING**（追跡している自前コードのみ）。
-  `dist` は PUC の配信先なので、整形のための版数上げ＝配信を起こしたくない。だから `phpcs-changed` で**変更行のみ**を必須にしている
-- ★★★ **`phpcbf` を走らせないこと。** 一度走ると自動修正が入り、上の前提が丸ごと壊れる
-- **検査ツールは同梱しない。** `composer install` で入る（`composer.json` は `require-dev` のみ）。
-  生成物 `vendor/` は `.gitignore` 済み・配布物からは `export-ignore` 済み
-- **standard は `WordPress-Extra`。** `WordPress-Core` は未エスケープ出力（XSS）も nonce 未検証も
-  **検出しない**（陽性対照で実測）。フル `WordPress` との差は docblock の書式だけなので採らない
-- **起動条件は `pull_request` の無条件実行。** `run-ci` ラベル条件にしない。
-  vk-agents の `ci.md` はエージェントが CI を起動しない運用だが、
-  「リポジトリ側の設定で自動実行される場合」は例外。ラベル運用だと自動フローの PR で CI が一度も走らない
-- `inc/plugin-update-checker/` は第三者コードなので `.phpcs.xml.dist` で検査対象から除外
-- **third-party action はタグ固定のまま**（公開 repo・secrets 未使用・`contents: read` のみ・成果物を生成しない）。
-  ★ secrets を持つか配布物を生成するようになったら SHA 固定を見直す
-
-### ★★★ CI が守るのは PHP 7.4 まで。7.3 は守られていない
-
-下の「宣言（Requires）の方針」は `Requires PHP` を**無宣言で据え置く**判断をしており、その根拠は
-「PHP 7.3.5 で `php -l` が通る」という実測1本だけ。**CI の matrix は `['7.4','8.3']` なので、この根拠は自動では守られていない。**
-
-★ 次の構文を書くと **PHP 7.3 の個体は白画面**になる。しかも `Requires PHP` が無いので
-**WordPress は警告を出さずに更新を配る**（更新リンクを止める `requires_php` を PUC に渡さないため）:
-アロー関数 `fn() =>` / 型付きプロパティ / `??=` / `match` / ヌル安全演算子 `?->`
-
-★★ **PHPCompatibility では代用できない。** 2026-08-27 の実測で、安定版 9.3.5（2019年）は
-アロー関数・`match`・`?->` を**検出しない**。「PHPCompatibility が緑」は「7.3 で動く」の証明にならない。
-
-→ 7.3 で動くことを保証したい変更を書いたら、その場で PHP 7.3 の `php -l` を通すこと。
-
-### ★ CI に触るときの検証
-
-**「Error 0 で緑」を成果にしないこと。** `.php` を変更しない PR では PHPCS は対象0件で自明に緑になる。
-検査が動いていることは**陽性対照**でしか言えない ― 使い捨てブランチに `echo $_GET['probe'];` を1行足し、
-`PHPCS` が赤くなり指摘がその行を指すことを確認する。
-
-★★ **配布物を検証するときは「CI 一式が入っていないこと」だけを見ないこと。**
-それだと**消えてはいけない物が消えたことに気づけない**。現行 `dist` とファイル一覧を突合する。
-
-```sh
-git archive --format=tar HEAD | tar -t | sort > /tmp/pr.txt
-git archive --format=tar dist | tar -t | sort > /tmp/dist.txt
-comm -3 /tmp/dist.txt /tmp/pr.txt     # ★ 空であること
-grep -v '/$' /tmp/pr.txt | grep -cE 'plugin-update-checker/(vendor/|composer\.json)'   # ★ 4
-```
-
-★ `grep -v '/$'` を忘れると `vendor/` のディレクトリ行も数えて 5 になる。
-
-### ★★ 素の `phpcs` を叩くと数字が狂う
-
-`.phpcs.xml.dist` の `<file>.</file>` は**作業ディレクトリを全部掃く**。`phpcs` は `.gitignore` を尊重しないので、
-`.claude/worktrees/` のコピーや `-old` 系のバックアップまで数えてしまう。
-
-2026-08-28 に実測した例（excelrange）: 追跡ファイルのみなら **81 E / 4 W** だが、
-`.gitignore` 済みの `inc/tools/import-excel-old.php` を拾うと **126 E / 8 W** になる。
-
-→ 上の基準値を測り直すときは、対象を `git ls-files '*.php'` に限定すること。
-**CI では発火しない**（`phpcs-changed` に `git diff` 由来の明示ファイルだけを渡すため）。
-
-### dist への直 push も検査する
-
-`on:` は `pull_request` と `push: branches: [dist]` の2つ。`dist` は PUC の配信元で、版数上げは
-人が直接 push する運用なので、PR を通らない変更がそのまま利用者へ配られる経路が残っていた。
-
-★ **これは鍵ではなく火災報知器。** CI は push の**後**に走るので、壊れたコードは一度 `dist` に載る。
-配信そのものを止めたいなら branch protection の必須チェック化が要るが、
-その場合は**版数上げの直 push も塞がる**（2026-08-28 時点で Classic・Rulesets とも未設定）。
-
-★ push では `phpcs-changed` は走らない（比較の基準になるブランチが無いため）。走るのは `php -l` の2つだけ。
+- 定義は `.github/workflows/ci.yml`。PR ごとに `php -l`（PHP 7.4 / 8.3）と
+  `PHPCS (WordPress-Extra, changed lines)` が走る。`dist` への直 push では `php -l` の2つだけ走る
+- **既存指摘の基準値: 65 ERROR / 22 WARNING**（2026-08-28 実測・`WordPress-Extra`）。
+  ★ 測り直すときは `vendor/bin/phpcs --standard=./.phpcs.xml.dist --report=summary $(git ls-files '*.php')`
+  の形でのみ行う。素の phpcs は `.gitignore` を尊重しない
+- **`Requires PHP` は無宣言**（下の「宣言（Requires）の方針」による意図的な判断）。
+  CI の matrix は `['7.4','8.3']` なので、**実質の下限は 7.4。7.3 は CI では守られていない**。
+  ★ 7.3 で動くことを保証したい変更を書いたら、その場で PHP 7.3 の `php -l` を通すこと
+- **`composer.json` の `name` は原本のまま**（`etbsjp/widget-shortcode-tools`）。
+  `composer.lock` の `content-hash` と**ペアとして整合している**ので、これでよい。
+  ★ 改名するなら `composer update --lock` も必ず走らせること
+- `.github/workflows/ci.yml` は**原本と byte 一致**。書き換えない（直すなら原本側で直して再展開）
 
 ## アンインストール
 
