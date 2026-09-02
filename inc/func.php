@@ -17,7 +17,7 @@ if ( ! function_exists( 'clbx_add_dashboard_widget' ) ) {
 		if ( ! current_user_can( 'publish_pages' ) ) { return; }
 		wp_add_dashboard_widget(
 			'clbx_dashboard_widget',
-			'WooCommerce Checkout Colorbox',
+			'ETBS Checkout Colorbox',
 			'clbx_render_dashboard_widget'
 		);
 	}

@@ -1,11 +1,13 @@
 <?php
 /**
- * Plugin Name: WooCommerce Checkout Colorbox
- * Version: 1.1.0
+ * Plugin Name: ETBS Checkout Colorbox
+ * Version: 1.1.1
  * Description: WooCommerce 注文確定ページに確認用のダイアログを表示します。
  * Author: ETBS (DAI)
  * Author URI: https://etbs.jp
  * Plugin URI: https://etbs.jp/product-category/wordpress-tools/
+ * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: woo-checkout-colorbox
  * Domain Path: /languages
  * @package woo-checkout-colorbox
