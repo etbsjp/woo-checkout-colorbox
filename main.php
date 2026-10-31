@@ -21,7 +21,7 @@ $clbx_version = '1.1.0';
 // 設定
 require_once( dirname( __FILE__ ) . '/tools/setting.php' );
 
-// サポート導線（ダッシュボードウィジェット・プラグイン一覧行・設定画面フッター）
+// サポート導線（ダッシュボードウィジェット・プラグイン一覧行・設定画面フッター）と、自分のボタンを持つ支払い方法の一覧
 require_once( dirname( __FILE__ ) . '/inc/func.php' );
 
 $option = get_option('woochksetting', Woo_Chkbox_Settings::options_default());
@@ -42,8 +42,9 @@ if ( ! function_exists( 'clrbx_styles' ) ){
 			// セレクタ文字列の外に出て任意のJSコードを書けてしまう経路を塞ぐ。
 			$option = get_option( 'woochksetting', Woo_Chkbox_Settings::options_default() );
 			$clbx_script_data = array(
-				'inputareaChk' => $option['clbx_inputarea_chk'],
-				'displayArea'  => Woo_Chkbox_Settings::display_area(),
+				'inputareaChk'             => $option['clbx_inputarea_chk'],
+				'displayArea'              => Woo_Chkbox_Settings::display_area(),
+				'ownButtonGatewayPrefixes' => clbx_own_button_gateway_prefixes(),
 			);
 			wp_add_inline_script( 'col-scripts', 'var clbxScriptData = ' . wp_json_encode( $clbx_script_data ) . ';', 'before' );
 
@@ -55,10 +56,18 @@ if ( ! function_exists( 'clrbx_styles' ) ){
 }
 
 if ( ! function_exists( 'clrbx_button_html' ) ){
-	function clrbx_button_html() {
+	/**
+	 * 本物の注文ボタンの前に、確認ダイアログを開く差し替えボタンを足す。
+	 *
+	 * @param string $button_html WooCommerce が作った本物の注文ボタンの HTML。
+	 * @return string 差し替えボタンを足した HTML。
+	 */
+	function clrbx_button_html( $button_html ) {
 		global $clbx_order_text;
 		$order_button_text = $clbx_order_text;
-		return '<input type="button" onclick="javascript:confirm_order();" class="button alt" name="woocommerce_checkout_place_order" id="place_order2" value="' . esc_attr( $order_button_text ) . '" data-value="' . esc_attr( $order_button_text ) . '"><button type="submit" class="button alt" name="woocommerce_checkout_place_order" id="place_order" style="display:none">';
+		// 本物のボタンは書き換えない。どちらのボタンを見せるかは css/col.css が決める。
+		// インライン style で隠すと、ボタンを出し入れする決済プラグインと取り合いになる。
+		return '<input type="button" onclick="javascript:confirm_order();" class="button alt" name="woocommerce_checkout_place_order" id="place_order2" value="' . esc_attr( $order_button_text ) . '" data-value="' . esc_attr( $order_button_text ) . '">' . $button_html;
 	}
 	add_filter( 'woocommerce_order_button_html', 'clrbx_button_html' );
 }
@@ -74,8 +83,6 @@ if ( ! function_exists( 'add_clrbx_action' ) ){
 		<div style="display: none;">
 		<section id="clrbx" title="{$clbx_dialog_title_esc}">
 		<p>{$clbx_dialog_text_esc}</p>
-		<table id="clbx_dialog_table"><tbody>
-		</tbody></table>
 		<ul>
 		<li><input id="yes" type="button" onclick="javascript:order_submit();" value="はい"></li>
 		<li><input id="no" type="button" onclick="javascript:confirm_close();"value="いいえ"</li>

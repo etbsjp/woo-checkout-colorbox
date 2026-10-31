@@ -100,3 +100,20 @@ if ( ! function_exists( 'clbx_admin_footer_text' ) ) {
 	}
 	add_filter( 'admin_footer_text', 'clbx_admin_footer_text' );
 }
+
+/*-------------------------------------------*/
+/* 自分のボタンを持つ支払い方法
+/*-------------------------------------------*/
+if ( ! function_exists( 'clbx_own_button_gateway_prefixes' ) ) {
+	/**
+	 * 確認ダイアログを出さない支払い方法の ID（前方一致）を返す
+	 *
+	 * これらは自分の決済画面やボタンで手続きを進める。差し替えボタンから送ると
+	 * その手続きを飛ばしてエラーになるため、本物のボタンの扱いを各プラグインに任せる。
+	 *
+	 * @return string[] 支払い方法の ID の先頭部分の一覧。
+	 */
+	function clbx_own_button_gateway_prefixes() {
+		return (array) apply_filters( 'clbx_own_button_gateway_prefixes', array( 'ppcp-', 'amazon_payments_advanced' ) );
+	}
+}
