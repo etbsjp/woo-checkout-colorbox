@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: ETBS Checkout Colorbox
- * Version: 1.1.1
+ * Version: 1.1.2
  * Description: WooCommerce 注文確定ページに確認用のダイアログを表示します。
  * Author: ETBS (DAI)
  * Author URI: https://etbs.jp
@@ -16,7 +16,7 @@
 // プラグインファイルのパスを定数化しておく（js/css の URL 生成をディレクトリ名固定にしないため）
 define( 'CLBX_PLUGIN_FILE', __FILE__ );
 
-$clbx_version = '1.1.1.1';
+$clbx_version = '1.1.2';
 
 // 設定
 require_once( dirname( __FILE__ ) . '/tools/setting.php' );
