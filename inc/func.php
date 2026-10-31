@@ -114,6 +114,6 @@ if ( ! function_exists( 'clbx_own_button_gateway_prefixes' ) ) {
 	 * @return string[] 支払い方法の ID の先頭部分の一覧。
 	 */
 	function clbx_own_button_gateway_prefixes() {
-		return (array) apply_filters( 'clbx_own_button_gateway_prefixes', array( 'ppcp-', 'amazon_payments_advanced' ) );
+		return array_values( (array) apply_filters( 'clbx_own_button_gateway_prefixes', array( 'ppcp-', 'amazon_payments_advanced' ) ) );
 	}
 }

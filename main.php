@@ -16,7 +16,7 @@
 // プラグインファイルのパスを定数化しておく（js/css の URL 生成をディレクトリ名固定にしないため）
 define( 'CLBX_PLUGIN_FILE', __FILE__ );
 
-$clbx_version = '1.1.0';
+$clbx_version = '1.1.2';
 
 // 設定
 require_once( dirname( __FILE__ ) . '/tools/setting.php' );
