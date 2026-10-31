@@ -42,8 +42,8 @@
 		var chk;
 		var i;
 
-		// 表は開くときに作る。ページを開いた時点であると、サイト側に残る旧コードが
-		// PayPal のボタンの置き場所を隠れたダイアログへ移してしまう。
+		// 表は開くときに作る。ページを開いた時点であると、テーマに写された旧版のコード
+		// （.ppc-button-wrapper を表の後ろへ移す）が PayPal のボタンを隠れたダイアログへ移してしまう。
 		if ( ! $( '#clbx_dialog_table' ).length ) {
 			$( '#clrbx p' ).first().after( '<table id="clbx_dialog_table"><tbody></tbody></table>' );
 		}
@@ -74,7 +74,7 @@
 		chk = $( '.order-total td' ).html();
 		$( '#clbx_dialog_table tbody' ).append( '<tr><th>合計金額</th><td><span class="woocommerce-Price-amount">' + chk + '</span></td></tr>' );
 
-		// サイト側に残る旧コードが「はい」を隠していても、ここへ来る支払い方法では必ず押せるようにする
+		// テーマに写された旧版のコードが PayPal 選択時に「はい」を隠していても、押せるように戻す
 		$( '#yes' ).css( 'display', 'inline-block' );
 
 		$( '#clrbx' ).dialog( {

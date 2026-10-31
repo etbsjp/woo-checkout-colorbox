@@ -47,6 +47,7 @@ if ( ! function_exists( 'clbx_render_dashboard_widget' ) ) {
 		<ul style="margin:6px 0 12px 1.2em;list-style:disc;">
 			<li>「実行時に空かどうか判定するテキストボックス」に、存在しないフィールド名や空白行を指定するとエラーになります。ご注意ください。</li>
 			<li>「注文ページのスラッグ」には、実際のチェックアウトページのスラッグを指定してください。異なるスラッグを指定すると確認ダイアログが表示されません。</li>
+			<li>PayPal Payments・Amazon Pay など、自分のボタンで手続きを進める支払い方法では確認ダイアログを表示しません。</li>
 		</ul>
 
 		<strong>サポート</strong>
