@@ -68,13 +68,36 @@ class Woo_Chkbox_Settings {
 		return $default;
 	}
 
+	/**
+	 * 確認ダイアログに表示する項目の対応表を返す
+	 *
+	 * @return array 表示名をキー、入力欄の id を値とする配列。
+	 */
 	public static function display_area() {
 		$displayarea = array(
 			'姓' => 'billing_last_name', 
 			'名' => 'billing_first_name',
 			'ﾒｰﾙｱﾄﾞﾚｽ' => 'billing_email'
 		);
-		return $displayarea;
+
+		/**
+		 * 確認ダイアログに表示する項目（表示名 => 入力欄の id）を差し替えるフィルター（サイト専用プラグイン向け）。
+		 *
+		 * @param array $displayarea 表示名をキー、入力欄の id を値とする配列。
+		 */
+		$filtered = apply_filters( 'clbx_display_area', $displayarea );
+		if ( ! is_array( $filtered ) ) {
+			return $displayarea;
+		}
+
+		// 入力欄の id は jQuery のセレクタに連結されるため、英数字・ハイフン・アンダースコアのみ通す
+		$result = array();
+		foreach ( $filtered as $label => $selector_id ) {
+			if ( is_string( $selector_id ) && preg_match( '/^[A-Za-z0-9_-]+$/', $selector_id ) ) {
+				$result[ (string) $label ] = $selector_id;
+			}
+		}
+		return $result;
 	}
 
 	public static function clrset_gets(){
