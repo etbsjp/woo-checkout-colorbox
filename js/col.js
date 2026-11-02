@@ -36,13 +36,18 @@
 	 * ダイアログを開かずそのまま注文ボタンをクリックする。
 	 */
 	window.confirm_order = function () {
-		$( '#clbx_dialog_table tbody tr' ).remove();
-
 		var data = ( typeof window.clbxScriptData !== 'undefined' ) ? window.clbxScriptData : {};
 		var inputareaChk = data.inputareaChk || [];
 		var displayArea = data.displayArea || {};
 		var chk;
 		var i;
+
+		// 表は開くときに作る。ページを開いた時点であると、テーマに写された旧版のコード
+		// （.ppc-button-wrapper を表の後ろへ移す）が PayPal のボタンを隠れたダイアログへ移してしまう。
+		if ( ! $( '#clbx_dialog_table' ).length ) {
+			$( '#clrbx p' ).first().after( '<table id="clbx_dialog_table"><tbody></tbody></table>' );
+		}
+		$( '#clbx_dialog_table tbody tr' ).remove();
 
 		// 実行時に空かどうか判定する項目（未入力があれば確認ダイアログを開かずそのまま送信する）
 		for ( i = 0; i < inputareaChk.length; i++ ) {
@@ -68,6 +73,9 @@
 		// 合計金額
 		chk = $( '.order-total td' ).html();
 		$( '#clbx_dialog_table tbody' ).append( '<tr><th>合計金額</th><td><span class="woocommerce-Price-amount">' + chk + '</span></td></tr>' );
+
+		// テーマに写された旧版のコードが PayPal 選択時に「はい」を隠していても、押せるように戻す
+		$( '#yes' ).css( 'display', 'inline-block' );
 
 		$( '#clrbx' ).dialog( {
 			width: wd,
@@ -104,23 +112,34 @@
 		} );
 	} );
 
-	$( 'div.ppc-button-wrapper' ).insertAfter( '#clbx_dialog_table' );
-
 	/**
-	 * PayPal決済が選択されている場合は「はい」ボタンを非表示にする
-	 * （PayPalの決済ボタン経由で注文が完了するため）
+	 * 選択中の支払い方法が自分のボタンを持つか判定する
+	 *
+	 * @return {boolean} 自分のボタンを持つ支払い方法なら true
 	 */
-	function paypal_yes_none() {
-		var v = $( 'input[name=payment_method]:checked' ).val();
-		if ( v === 'ppcp-gateway' ) {
-			$( 'input#yes' ).css( 'display', 'none' );
-		} else {
-			$( 'input#yes' ).css( 'display', 'inline-block' );
+	function has_own_button() {
+		var data = ( typeof window.clbxScriptData !== 'undefined' ) ? window.clbxScriptData : {};
+		var prefixes = data.ownButtonGatewayPrefixes || [];
+		var method = $( 'input[name=payment_method]:checked' ).val() || '';
+		var i;
+
+		for ( i = 0; i < prefixes.length; i++ ) {
+			if ( method.indexOf( prefixes[ i ] ) === 0 ) {
+				return true;
+			}
 		}
+		return false;
 	}
 
-	$( function () {
-		paypal_yes_none();
-	} );
+	/**
+	 * 支払い方法に合わせて、差し替えボタンと本物のボタンのどちらを見せるかを切り替える。
+	 * 支払い欄は updated_checkout で作り直されるので、残り続ける form の class で持つ。
+	 */
+	function sync_order_button() {
+		$( 'form.checkout' ).toggleClass( 'clbx-own-button', has_own_button() );
+	}
+
+	$( document.body ).on( 'payment_method_selected updated_checkout', sync_order_button );
+	sync_order_button();
 
 }( jQuery ) );

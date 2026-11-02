@@ -47,6 +47,7 @@ if ( ! function_exists( 'clbx_render_dashboard_widget' ) ) {
 		<ul style="margin:6px 0 12px 1.2em;list-style:disc;">
 			<li>「実行時に空かどうか判定するテキストボックス」に、存在しないフィールド名や空白行を指定するとエラーになります。ご注意ください。</li>
 			<li>「注文ページのスラッグ」には、実際のチェックアウトページのスラッグを指定してください。異なるスラッグを指定すると確認ダイアログが表示されません。</li>
+			<li>PayPal Payments・Amazon Pay など、自分のボタンで手続きを進める支払い方法では確認ダイアログを表示しません。</li>
 		</ul>
 
 		<strong>サポート</strong>
@@ -99,4 +100,21 @@ if ( ! function_exists( 'clbx_admin_footer_text' ) ) {
 		return 'WooCommerce Checkout Colorboxが役に立ったら <a href="https://etbs.jp/product/donate/?utm_source=woo-checkout-colorbox&utm_medium=plugin" target="_blank" rel="noopener noreferrer">開発を支援</a>、カスタマイズは <a href="https://etbs.jp/product-category/wordpress-tools/?utm_source=woo-checkout-colorbox&utm_medium=plugin" target="_blank" rel="noopener noreferrer">開発のご依頼</a> からどうぞ。';
 	}
 	add_filter( 'admin_footer_text', 'clbx_admin_footer_text' );
+}
+
+/*-------------------------------------------*/
+/* 自分のボタンを持つ支払い方法
+/*-------------------------------------------*/
+if ( ! function_exists( 'clbx_own_button_gateway_prefixes' ) ) {
+	/**
+	 * 確認ダイアログを出さない支払い方法の ID（前方一致）を返す
+	 *
+	 * これらは自分の決済画面やボタンで手続きを進める。差し替えボタンから送ると
+	 * その手続きを飛ばしてエラーになるため、本物のボタンの扱いを各プラグインに任せる。
+	 *
+	 * @return string[] 支払い方法の ID の先頭部分の一覧。
+	 */
+	function clbx_own_button_gateway_prefixes() {
+		return array_values( (array) apply_filters( 'clbx_own_button_gateway_prefixes', array( 'ppcp-', 'amazon_payments_advanced' ) ) );
+	}
 }
