@@ -9,6 +9,72 @@
 ( function ( $ ) {
 	'use strict';
 
+	var filters = {};
+
+	/**
+	 * サイト専用プラグイン向けの差し込み口。確認ダイアログの表示行の組み立てを applyFilters() 経由にしている。
+	 * 名前と引数は公開 API なので変えないこと。
+	 *   fieldRowHtml(html, ctx)  項目1行。ctx = { label, selectorId, value, escapedLabel, escapedValue }
+	 *   rowsAfterItems(html)     商品明細の直後に足す行
+	 *   rowsAfterTotal(html)     合計金額の直後に足す行
+	 */
+	window.clbx = window.clbx || {};
+
+	/**
+	 * HTML に連結する文字列をエスケープする
+	 *
+	 * @param {string} text エスケープ前の文字列。
+	 * @return {string} エスケープ後の文字列。
+	 */
+	window.clbx.escapeHtml = function ( text ) {
+		return $( '<div>' ).text( text ).html();
+	};
+
+	/**
+	 * フィルターを登録する
+	 *
+	 * @param {string}   name 差し込み口の名前。
+	 * @param {Function} fn   (value, ctx) を受け取り、文字列を返す関数。
+	 */
+	window.clbx.addFilter = function ( name, fn ) {
+		( filters[ name ] = filters[ name ] || [] ).push( fn );
+	};
+
+	/**
+	 * 登録済みのフィルターを順に適用する。例外や文字列以外の戻り値は無視し、確認ダイアログを止めない
+	 *
+	 * @param {string} name  差し込み口の名前。
+	 * @param {string} value 初期値（HTML）。
+	 * @param {Object} ctx   差し込み口ごとの文脈。
+	 * @return {string} 適用後の HTML。
+	 */
+	window.clbx.applyFilters = function ( name, value, ctx ) {
+		var list = filters[ name ] || [];
+		for ( var j = 0; j < list.length; j++ ) {
+			try {
+				var next = list[ j ]( value, ctx );
+				if ( typeof next === 'string' ) {
+					value = next;
+				}
+			} catch ( e ) {
+				if ( window.console ) {
+					window.console.error( 'clbx filter error: ' + name, e );
+				}
+			}
+		}
+		return value;
+	};
+
+	/**
+	 * jQuery のセレクタに連結してよい id か判定する
+	 *
+	 * @param {*} id 入力欄の id。
+	 * @return {boolean} 英数字・ハイフン・アンダースコアのみの文字列なら true。
+	 */
+	function isValidId( id ) {
+		return typeof id === 'string' && /^[A-Za-z0-9_-]+$/.test( id );
+	}
+
 	var wd = wdtchk();
 
 	$( window ).resize( function () {
@@ -51,6 +117,9 @@
 
 		// 実行時に空かどうか判定する項目（未入力があれば確認ダイアログを開かずそのまま送信する）
 		for ( i = 0; i < inputareaChk.length; i++ ) {
+			if ( ! isValidId( inputareaChk[ i ] ) ) {
+				continue;
+			}
 			chk = $( '#' + inputareaChk[ i ] ).val();
 			if ( ! chk ) {
 				document.getElementById( 'place_order' ).click();
@@ -60,9 +129,22 @@
 
 		// ダイアログに表示する項目（姓・名・メールアドレスなど）
 		$.each( displayArea, function ( label, selectorId ) {
+			if ( ! isValidId( selectorId ) ) {
+				return;
+			}
 			chk = $( '#' + selectorId ).val();
 			if ( chk ) {
-				$( '#clbx_dialog_table tbody' ).append( '<tr><th>' + label + '</th><td>' + chk + '</td></tr>' );
+				var escapedLabel = window.clbx.escapeHtml( label );
+				var escapedValue = window.clbx.escapeHtml( chk );
+				var rowHtml = '<tr><th>' + escapedLabel + '</th><td>' + escapedValue + '</td></tr>';
+				rowHtml = window.clbx.applyFilters( 'fieldRowHtml', rowHtml, {
+					label: label,
+					selectorId: selectorId,
+					value: chk,
+					escapedLabel: escapedLabel,
+					escapedValue: escapedValue
+				} );
+				$( '#clbx_dialog_table tbody' ).append( rowHtml );
 			}
 		} );
 
@@ -70,9 +152,12 @@
 		chk = $( 'table.woocommerce-checkout-review-order-table tbody' ).html();
 		$( '#clbx_dialog_table tbody' ).append( '<tr><th colspan="2">商品</th></tr>' + chk );
 
+		$( '#clbx_dialog_table tbody' ).append( window.clbx.applyFilters( 'rowsAfterItems', '' ) );
+
 		// 合計金額
 		chk = $( '.order-total td' ).html();
 		$( '#clbx_dialog_table tbody' ).append( '<tr><th>合計金額</th><td><span class="woocommerce-Price-amount">' + chk + '</span></td></tr>' );
+		$( '#clbx_dialog_table tbody' ).append( window.clbx.applyFilters( 'rowsAfterTotal', '' ) );
 
 		// テーマに写された旧版のコードが PayPal 選択時に「はい」を隠していても、押せるように戻す
 		$( '#yes' ).css( 'display', 'inline-block' );

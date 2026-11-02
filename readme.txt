@@ -1,7 +1,7 @@
 === ETBS Checkout Colorbox ===
 Contributors:      etbsjp
 Tags:              woocommerce, checkout, confirm, dialog
-Stable tag:        1.1.2
+Stable tag:        1.1.3
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -14,6 +14,10 @@ WooCommerce の注文確定ページに、確認用のダイアログを表示�
 PayPal Payments・Amazon Pay など、自分のボタンで手続きを進める支払い方法では確認ダイアログを表示しません。
 
 == Changelog ==
+
+= 1.1.3 =
+* [ 機能追加 ] 確認ダイアログの項目・案内文・表示行を、別のプラグインから差し替えられる差し込み口（フィルター）を追加しました。差し込み口を使わない場合、表示は変わりません。
+* [ その他 ] 確認ダイアログに表示する値のエスケープを強化しました。
 
 = 1.1.2 =
 * [ 不具合修正 ] PayPal Payments・Amazon Pay で確認ダイアログの注文ボタンが残り、決済ボタンが出ない・エラーになる問題を修正しました。これらの支払い方法では確認ダイアログを表示しません。

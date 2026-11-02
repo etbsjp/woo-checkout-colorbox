@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: ETBS Checkout Colorbox
- * Version: 1.1.2
+ * Version: 1.1.3
  * Description: WooCommerce 注文確定ページに確認用のダイアログを表示します。
  * Author: ETBS (DAI)
  * Author URI: https://etbs.jp
@@ -16,7 +16,10 @@
 // プラグインファイルのパスを定数化しておく（js/css の URL 生成をディレクトリ名固定にしないため）
 define( 'CLBX_PLUGIN_FILE', __FILE__ );
 
-$clbx_version = '1.1.2';
+$clbx_version = '1.1.3';
+
+// 差し込み口（フィルター）の版。サイト専用プラグインが対応の有無を判定するのに使う
+define( 'CLBX_API_VERSION', 1 );
 
 // 設定
 require_once( dirname( __FILE__ ) . '/tools/setting.php' );
@@ -31,6 +34,11 @@ $clbx_dialog_title = $option['clbx_dialog_title'];
 $clbx_dialog_text = $option['clbx_dialog_text'];
 
 if ( ! function_exists( 'clrbx_styles' ) ){
+	/**
+	 * 確認ダイアログを出すページで、JS・CSS を読み込み、JS へ設定値を渡す
+	 *
+	 * @return void
+	 */
 	function clrbx_styles() {
 		global $clbx_version;
 		global $clbx_checkout_page;
@@ -46,6 +54,15 @@ if ( ! function_exists( 'clrbx_styles' ) ){
 				'displayArea'              => Woo_Chkbox_Settings::display_area(),
 				'ownButtonGatewayPrefixes' => clbx_own_button_gateway_prefixes(),
 			);
+			/**
+			 * JS へ渡す設定値を差し替えるフィルター（サイト専用プラグイン向け）。
+			 *
+			 * @param array $clbx_script_data inputareaChk / displayArea を含む配列。
+			 */
+			$filtered_script_data = apply_filters( 'clbx_script_data', $clbx_script_data );
+			if ( is_array( $filtered_script_data ) ) {
+				$clbx_script_data = $filtered_script_data;
+			}
 			wp_add_inline_script( 'col-scripts', 'var clbxScriptData = ' . wp_json_encode( $clbx_script_data ) . ';', 'before' );
 
 			wp_enqueue_style( 'jquery-ui-dialog-min-css', includes_url().'css/jquery-ui-dialog.min.css' );
@@ -73,16 +90,30 @@ if ( ! function_exists( 'clrbx_button_html' ) ){
 }
 
 if ( ! function_exists( 'add_clrbx_action' ) ){
+	/**
+	 * 確認ダイアログの HTML をフッターに出力する（確認ダイアログを出すページのみ）
+	 *
+	 * @return void
+	 */
 	function add_clrbx_action() {
 		global $clbx_dialog_title;
 		global $clbx_dialog_text;
 		// 設定画面由来の値を出力する際は必ずエスケープする（属性値はesc_attr、本文はesc_html）
 		$clbx_dialog_title_esc = esc_attr( $clbx_dialog_title );
 		$clbx_dialog_text_esc = esc_html( $clbx_dialog_text );
+
+		/**
+		 * 確認ダイアログの表のあと（「はい」「いいえ」の前）に差し込む HTML を返すフィルター（サイト専用プラグイン向け）。
+		 * wp_kses_post() を通すため、使えるのは投稿本文で許可されるタグのみ。
+		 *
+		 * @param string $html 差し込む HTML（初期値は空）。
+		 */
+		$clbx_dialog_footer_html = wp_kses_post( (string) apply_filters( 'clbx_dialog_footer_html', '' ) );
 		$html = <<<EOF
 		<div style="display: none;">
 		<section id="clrbx" title="{$clbx_dialog_title_esc}">
 		<p>{$clbx_dialog_text_esc}</p>
+		{$clbx_dialog_footer_html}
 		<ul>
 		<li><input id="yes" type="button" onclick="javascript:order_submit();" value="はい"></li>
 		<li><input id="no" type="button" onclick="javascript:confirm_close();"value="いいえ"</li>
