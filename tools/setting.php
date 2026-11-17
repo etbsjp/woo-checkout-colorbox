@@ -8,7 +8,7 @@ class Woo_Chkbox_Settings {
 
 	public static function etbs_woochkbox_menu_page() {
 		// メニュー名（第4引数）は「注文」で始めないこと。WooCommerce は「注文」で始まる最初のサブメニューに処理中の注文数バッジを付けるため、本体の「注文」からバッジを横取りする。
-		add_submenu_page( 'woocommerce', '確認ダイアログ設定', '確認ダイアログ設定', 'publish_pages', 'woochksetting-page', array(__CLASS__, 'add_woochksetting_page') ); 
+		add_submenu_page( 'woocommerce', '確認ダイアログ設定', '確認ダイアログ設定', 'publish_pages', 'woochksetting-page', array( __CLASS__, 'add_woochksetting_page' ) );
 	}
 
 	/**
