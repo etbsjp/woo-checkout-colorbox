@@ -3,7 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /*-------------------------------------------*/
 /* ダッシュボードウィジェット（使い方・注意事項・サポート案内）
-/* 設定画面（WooCommerce > 注文確認設定）と同じ権限（publish_pages）で出し分ける。
+/* 設定画面（WooCommerce > 確認ダイアログ設定）と同じ権限（publish_pages）で出し分ける。
 /*-------------------------------------------*/
 if ( ! function_exists( 'clbx_add_dashboard_widget' ) ) {
 	/**
@@ -39,7 +39,7 @@ if ( ! function_exists( 'clbx_render_dashboard_widget' ) ) {
 
 		<strong>使い方</strong>
 		<ul style="margin:6px 0 12px 1.2em;list-style:disc;">
-			<li><strong>WooCommerce &gt; 注文確認設定</strong>で、注文ボタンのテキスト・対象ページのスラッグ・確認ダイアログのタイトルと本文を設定します。</li>
+			<li><strong>WooCommerce &gt; 確認ダイアログ設定</strong>で、注文ボタンのテキスト・対象ページのスラッグ・確認ダイアログのタイトルと本文を設定します。</li>
 			<li>「実行時に空かどうか判定するテキストボックス」に指定したフィールド（例：姓・名・メールアドレス）は、未入力のまま注文しようとすると確認ダイアログを開かず、そのまま送信を止めます。</li>
 		</ul>
 
@@ -53,7 +53,7 @@ if ( ! function_exists( 'clbx_render_dashboard_widget' ) ) {
 		<strong>サポート</strong>
 		<p style="margin:6px 0 12px;">有償サポートやカスタマイズは<a href="https://etbs.jp/product-category/wordpress-tools/?utm_source=woo-checkout-colorbox&utm_medium=plugin" target="_blank" rel="noopener noreferrer">こちらのページ</a>からお問い合わせください。開発の継続は<a href="https://etbs.jp/product/donate/?utm_source=woo-checkout-colorbox&utm_medium=plugin" target="_blank" rel="noopener noreferrer">ご支援</a>で応援いただけます。</p>
 
-		<a href="<?php echo esc_url( $settings_url ); ?>" class="button button-primary">注文確認設定を開く</a>
+		<a href="<?php echo esc_url( $settings_url ); ?>" class="button button-primary">確認ダイアログ設定を開く</a>
 		<?php
 	}
 }
@@ -89,7 +89,7 @@ if ( ! function_exists( 'clbx_plugin_row_meta' ) ) {
 /*-------------------------------------------*/
 if ( ! function_exists( 'clbx_admin_footer_text' ) ) {
 	/**
-	 * 注文確認設定画面のフッターに支援・依頼リンクを表示する
+	 * 確認ダイアログ設定画面のフッターに支援・依頼リンクを表示する
 	 *
 	 * @param string $text 元のフッター文言
 	 * @return string フッター文言

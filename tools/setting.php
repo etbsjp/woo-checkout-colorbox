@@ -7,11 +7,12 @@ class Woo_Chkbox_Settings {
 	}
 
 	public static function etbs_woochkbox_menu_page() {
-		add_submenu_page( 'woocommerce', '注文確認設定', '注文確認設定', 'publish_pages', 'woochksetting-page', array(__CLASS__, 'add_woochksetting_page') ); 
+		// メニュー名（第4引数）は「注文」で始めないこと。WooCommerce は「注文」で始まる最初のサブメニューに処理中の注文数バッジを付けるため、本体の「注文」からバッジを横取りする。
+		add_submenu_page( 'woocommerce', '確認ダイアログ設定', '確認ダイアログ設定', 'publish_pages', 'woochksetting-page', array( __CLASS__, 'add_woochksetting_page' ) );
 	}
 
 	/**
-	 * 注文確認設定画面（管理画面のサブメニュー）を出力する
+	 * 確認ダイアログ設定画面（管理画面のサブメニュー）を出力する
 	 *
 	 * 保存済みオプションを取得し、入力フォームと入力補助用テキストエリアを描画する。
 	 * フォームの各値は出力時にエスケープしてから描画する。
@@ -27,7 +28,7 @@ class Woo_Chkbox_Settings {
 		$op4 = esc_attr( $option['clbx_dialog_text'] );
 		$html = <<< EOF
 		<style>#woochksetting-form label{font-weight:bold}input.clbx{width:350px}textarea.clbx{ width: 400px; }</style>
-		<h1>注文確認画面設定</h1>
+		<h1>確認ダイアログ設定</h1>
 		<form id="woochksetting-form" method="post" action="">
 		EOF;
 		echo $html;
@@ -37,9 +38,9 @@ class Woo_Chkbox_Settings {
 		<input type="text" id="clbx_order_text" class="clbx clbx_order_text" name="woochksetting[clbx_order_text]" value="{$op1}"></p>
 		<p><label>注文ページのスラッグ：</label>
 		<input type="text" id="clbx_checkout_page" class="clbx clbx_order_text" name="woochksetting[clbx_checkout_page]" value="{$op2}"></p>
-		<p><label>注文確認画面のタイトル：</label>
+		<p><label>確認ダイアログのタイトル：</label>
 		<input type="text" id="clbx_dialog_title" class="clbx clbx_dialog_title" name="woochksetting[clbx_dialog_title]" value="{$op3}"></p>
-		<p><label>注文確認画面のテキスト：</label>
+		<p><label>確認ダイアログのテキスト：</label>
 		<input type="text" id="clbx_dialog_text" class="clbx clbx_dialog_text" name="woochksetting[clbx_dialog_text]" value="{$op4}"></p>
 		EOF;
 		echo $html;
@@ -111,7 +112,7 @@ class Woo_Chkbox_Settings {
 	}
 
 	/**
-	 * 注文確認設定画面のフォーム送信を処理する（admin_initフック）
+	 * 確認ダイアログ設定画面のフォーム送信を処理する（admin_initフック）
 	 *
 	 * nonceと権限（publish_pages）を検証したうえで、POSTされた設定値をサニタイズして
 	 * 保存し、設定画面へリダイレクトする。
